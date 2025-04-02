@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作成コード表示ページ</title>
+    <!-- favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%234a6ee0' /%3E%3Ctext x='50' y='65' font-family='Arial' font-size='50' text-anchor='middle' fill='white'%3EC%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+    <style>
+        body {
+            font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 印刷用スタイル */
+        @media print {
+            body {
+                padding: 0;
+                font-size: 12pt;
+            }
+            
+            .no-print, .instructions, .tabs, .tab-content, button, textarea, h1, h2, .print-controls {
+                display: none !important;
+            }
+            
+            .result {
+                border: none;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+            
+            /* 印刷時にはヘッダー情報も非表示にする */
+            .print-header, .print-only {
+                display: none !important;
+            }
+        }
+        
+        h1, h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #4a6ee0;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .code-container {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 200px;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: -2px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+            border: 2px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 2px solid #fff;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+            border: 2px solid #ddd;
+            padding: 20px;
+            border-radius: 0 5px 5px 5px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            background-color: #fff;
+            min-height: 300px;
+        }
+        
+        #svg-code, #html-code {
+            width: 100%;
+            min-height: 200px;
+            font-family: monospace;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #4a6ee0;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #3a5bc0;
+        }
+        
+        .print-button {
+            background-color: #28a745;
+            margin-left: 10px;
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .print-button:hover {
+            background-color: #218838;
+        }
+        
+        .print-controls {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .comment {
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Claude作成コード表示ページ</h1>
+    
+    <div class="instructions">
+        <h2>使い方</h2>
+        <p>このテンプレートは、Claudeから提供されたSVGやHTMLコードを簡単に表示するためのものです。</p>
+        <p>以下の手順に従って使用してください：</p>
+        <ol>
+            <li>表示したいコードの種類（SVGまたはHTML）のタブを選択します。</li>
+            <li>テキストエリアにClaudeから提供されたコードをコピー＆ペーストします。</li>
+            <li>「表示する」ボタンをクリックすると、下部の結果エリアにコードの出力が表示されます。</li>
+        </ol>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(this, 'svg-tab')">SVG</div>
+        <div class="tab" onclick="switchTab(this, 'html-tab')">HTML</div>
+    </div>
+    
+    <div id="svg-tab" class="tab-content active">
+        <h2>SVGコード</h2>
+        <p>Claudeから提供されたSVGコードをここに貼り付けてください：</p>
+        <textarea id="svg-code" placeholder="ここにSVGコードを貼り付けてください（例: <svg>...</svg>）"></textarea>
+        <p class="comment">※ &lt;svg&gt;タグから&lt;/svg&gt;タグまでを含む完全なSVGコードを貼り付けてください。</p>
+        <button onclick="displaySVG()">SVGを表示する</button>
+    </div>
+    
+    <div id="html-tab" class="tab-content">
+        <h2>HTMLコード</h2>
+        <p>Claudeから提供されたHTMLコードをここに貼り付けてください：</p>
+        <textarea id="html-code" placeholder="ここにHTMLコードを貼り付けてください"></textarea>
+        <p class="comment">※ 完全なHTMLコードを貼り付けてください。スクリプトやスタイルも含めることができます。</p>
+        <button onclick="displayHTML()">HTMLを表示する</button>
+    </div>
+    
+    <h2>表示結果</h2>
+    <div class="result-container">
+        <!-- 印刷ヘッダーを削除 -->
+        <div id="result" class="result">
+            <p>ここに結果が表示されます...</p>
+        </div>
+        <div class="print-controls no-print">
+            <button onclick="printResult()" class="print-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px; vertical-align: text-bottom;">
+                    <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                    <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                </svg>
+                印刷する
+            </button>
+            <label for="print-title-input">印刷タイトル：</label>
+            <input type="text" id="print-title-input" value="" placeholder="タイトルを入力（任意）" style="padding: 5px; margin-left: 5px;">
+        </div>
+    </div>
+    
+    <script>
+        // タブ切り替え関数
+        function switchTab(tabElement, tabId) {
+            // すべてのタブを非アクティブにする
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // すべてのタブコンテンツを非表示にする
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 選択されたタブをアクティブにする
+            tabElement.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+        
+        // SVG表示関数
+        function displaySVG() {
+            const svgCode = document.getElementById('svg-code').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (svgCode.trim() === '') {
+                resultDiv.innerHTML = '<p>SVGコードが入力されていません。</p>';
+                return;
+            }
+            
+            try {
+                // SVGコードを表示
+                resultDiv.innerHTML = svgCode;
+            } catch (error) {
+                resultDiv.innerHTML = '<p>エラーが発生しました: ' + error.message + '</p>';
+            }
+        }
+        
+        // HTML表示関数
+        function displayHTML() {
+            const htmlCode = document.getElementById('html-code').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (htmlCode.trim() === '') {
+                resultDiv.innerHTML = '<p>HTMLコードが入力されていません。</p>';
+                return;
+            }
+            
+            try {
+                // HTMLコードを表示
+                resultDiv.innerHTML = htmlCode;
+            } catch (error) {
+                resultDiv.innerHTML = '<p>エラーが発生しました: ' + error.message + '</p>';
+            }
+        }
+        
+        // 印刷機能
+        function printResult() {
+            // 印刷実行（タイトルや日時の設定なし）
+            window.print();
+        }
+        
+        // ページ読み込み時の処理
+        window.onload = function() {
+            // 初期設定があれば追加
+        }
+    </script>
+</body>
+</html>
